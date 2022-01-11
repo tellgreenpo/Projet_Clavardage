@@ -1,7 +1,7 @@
 package network;
 
-import java.net.DatagramSocket ;
 import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.net.DatagramPacket ;
 
 public class ServerUDP extends Thread{
@@ -101,7 +101,10 @@ public class ServerUDP extends Thread{
 	public void run() {
 		System.out.println("[ServerUDP] running");
 		try {
-			DatagramSocket socket = new DatagramSocket(port);
+			MulticastSocket socket = new MulticastSocket(port);
+			InetAddress group = InetAddress.getByName("224.13.31.7");
+			socket.joinGroup(group)
+			;
 			DatagramPacket packet = null;
 			byte[] buffer = new byte[length];
 			
@@ -115,7 +118,37 @@ public class ServerUDP extends Thread{
 				// Clear buffer
 				buffer = new byte[length];
 			}
+			socket.leaveGroup(group);
+			socket.close();
+		}
+		catch (Exception e){
+			System.out.println(e);
+		}
+	}
+	
+	public static void main(String [] args) {
+		int count =0;
+		System.out.println("[ServerUDP] running");
+		try {
+			MulticastSocket socket = new MulticastSocket(5001);
+			InetAddress group = InetAddress.getByName("224.13.31.7");
+			socket.joinGroup(group)
+			;
+			DatagramPacket packet = null;
+			byte[] buffer = new byte[50000];
 			
+			while(count<5) {
+				packet = new DatagramPacket(buffer, buffer.length);
+				socket.receive(packet);
+				String data = new String(packet.getData(), 0, packet.getLength());
+				
+				System.out.println(data);
+				
+				// Clear buffer
+				buffer = new byte[50000];
+				count++;
+			}
+			socket.leaveGroup(group);
 			socket.close();
 		}
 		catch (Exception e){
